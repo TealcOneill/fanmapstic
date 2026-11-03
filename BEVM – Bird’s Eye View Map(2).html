@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BEVM – Bird’s Eye View Map</title>
+<!--
+BEVM v0.1 — ARCHITECTURE NOTES
+Units: 1 world unit = 1 tile = 3 ft. Heights are in tiles. Map is on the X/Z plane, +Y up, north = -Z.
+Layers (three.js): 0 default, 1 terrain (raycast/height only), 2 grid, 3+ one per object type.
+Terrain = heightfield: max() of hills, then pits SUBTRACT (pit depth is relative to the surface where it spawns).
+Non-terrain objects sit at the terrain height of their centre. Placement: random rejection with a min distance (2D).
+Export: top-down ortho render -> 2D canvas -> stamps (elevation bottom-left, cover bottom-right) -> WebP.
+Elevation = laser at tile centre, rounded to 0.5, zero = most common value. Cover: every non-zero tile is compared to its
+8 neighbours; the HIGHER tile gets a cover value from the difference (0.5 lesser=1, 1 standard=2, 1.5 greater=4, 2+ = ∞);
+where several marks hit one tile the LOWEST wins; stamps are written after all marks.
+v0.2 CHANGES: export camera now enables all layers (it only saw layer 0, so it drew an empty scene); stamps and labels are drawn last in 2D so nothing can occlude them; no-line-of-sight uses a crossed-out eye icon; middle-drag also rotates sideways; up/down arrows snap straight-down / side-on (compass removed); jitter is keyed by vertex position and normals are smoothed so meshes have no gaps; object cover label used the wrong tile conversion (fixed).
+v0.3 CHANGES: contour lines added (buildContours); tile stamps halved; eye cross-out thinner. Object labels keep their size.
+v0.4 CHANGES: tilt arrows step 0.5/45/89.9 degrees; Q/E and rotation snap in 45-degree steps without changing tilt; Iso is now a 45-degree tilt (no automatic yaw); view buttons highlight only on exact snap angles; accordion bars close/swap on the left 75% and pin open with the right-hand arrow.
+v0.5 CHANGES: two-pass export (background + foreground). Any mesh with userData.overhang=true (tree canopy for now) is ghosted in pass 1 and everything else is ghosted in pass 2; ghosted objects still cast shadows. Foreground has no grid or stamps. mapN counts Generate presses and names the files.
+THEME QUESTIONNAIRE NOTE: every item part that overhangs the rest (canopies, leaning cliffs, bridges, arches) must be flagged userData.overhang so export can split it.
+v0.6 CHANGES: grid auto-hides within 5 degrees of side-on (reads the manual checkbox, never writes it); items can be selected, dragged, scaled (width/depth together, height separate) and rotated from the Placement tab; object cover labels now measure the real scaled height (3 ft per tile) instead of a fixed number.
+NOT YET BUILT: lock/undo/drag-select/dragging items, light #2 and #3, round dials, Placement tab, scene dropdown, EXIT,
+tiled export, theme loading, noise textures, "?" help, touch controls, mixed-tile cover for objects.
+-->
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;font:13px system-ui,sans-serif;background:#1d1f24;color:#e8e8ea}
+#app{display:flex;height:100%}#view{flex:1;position:relative;min-width:0}canvas{display:block}
+#hud{position:absolute;left:8px;top:8px;display:flex;gap:4px;z-index:2}
+button,select,input{font:inherit}button{background:#33363f;color:#fff;border:1px solid #555;border-radius:4px;padding:5px 9px;cursor:pointer}
+button.on{background:#4a6ea8}
+#panel{width:320px;display:flex;flex-direction:column;background:#26282e;border-left:1px solid #444;padding-bottom:env(safe-area-inset-bottom,0)}
+#top{display:flex}#top button{flex:1;border-radius:0;padding:8px}#top button:disabled{opacity:.4}
+#scroll{flex:1;overflow:auto}.acc>h3{margin:0;display:flex;background:#30333b;cursor:pointer;border-bottom:1px solid #444}.acc>h3 .t{flex:3;padding:10px}.acc>h3 .pin{flex:1;padding:10px;text-align:center;border-left:1px solid #444}.acc.pinned .pin{background:#4a6ea8}
+.acc>div{display:none;padding:8px 10px}.acc.open>div{display:block}
+.sub{border:1px solid #444;border-radius:4px;margin:6px 0;padding:6px}.sub b{display:block;margin-bottom:4px}
+label{display:flex;justify-content:space-between;align-items:center;gap:6px;margin:4px 0}label input[type=range]{flex:1}
+input[type=number],select{width:80px;background:#1d1f24;color:#fff;border:1px solid #555;padding:3px}
+#go{margin:8px;padding:14px;background:#c0262d;border-color:#e44;font-weight:700;font-size:15px;border-radius:6px}
+#note{font-size:11px;opacity:.7;padding:4px 10px}
+@media (prefers-color-scheme:light){}
+</style></head><body>
+<div id="app"><div id="view"><div id="hud">
+<button data-v="top" class="on">Top</button><button data-v="iso">Iso</button><button data-v="side">Side</button>
+<button id="cq" title="Q">⟲</button><button id="up" title="Straight down">▲</button><button id="dn" title="Side on">▼</button><button id="ce" title="E">⟳</button>
+</div></div>
+<div id="panel"><div id="top"><button class="on">BEVM</button><button disabled>???</button></div>
+<div id="scroll">
+<div class="acc open" id="a1"><h3><span class="t">Settings</span><span class="pin" title="Lock open: stays open while you switch other tabs">▼</span></h3><div>
+<div class="sub"><b>Map size</b>
+<label>Tiles wide <input id="w" type="number" min="5" max="100" value="30"></label>
+<label>Tiles tall <input id="h" type="number" min="5" max="100" value="30"></label>
+<label>Tile px <input id="px" type="number" min="20" max="200" value="100"></label>
+<label>Grid lines <input id="grid" type="checkbox" checked></label></div>
+<div class="sub"><b>Light 1 (global)</b>
+<label>Angle° <input id="la" type="range" min="0" max="85" value="45"><span id="lav">45</span></label>
+<label>Compass° <input id="lc" type="range" min="0" max="359" value="315"><span id="lcv">315</span></label>
+<label>Strength <input id="li" type="range" min="0" max="2" step=".05" value="1"></label>
+<label>Tint <input id="lt" type="color" value="#fff3d6"></label></div>
+<div class="sub"><b>Rendering</b><label>Toon shader <input id="toon" type="checkbox" checked></label></div>
+</div></div>
+<div class="acc open" id="a2"><h3><span class="t">Generation</span><span class="pin" title="Lock open: stays open while you switch other tabs">▼</span></h3><div>
+<div class="sub"><b>Theme</b><select id="theme"><option>Demo (placeholder)</option></select></div>
+<div id="objs"></div></div></div>
+<div class="acc" id="a3"><h3><span class="t">Placement</span><span class="pin" title="Lock open: stays open while you switch other tabs">▼</span></h3><div><div id="nosel">Click an item on the map to select it. Drag it to move it.</div><div id="selui" style="display:none"><b id="selname"></b>
+<label>Width/depth ×<input id="sfp" type="range" min=".2" max="4" step=".05" value="1"><span id="sfpv">1</span></label>
+<label>Height ×<input id="sh" type="range" min=".2" max="4" step=".05" value="1"><span id="shv">1</span></label>
+<label>Rotation°<input id="sr" type="range" min="0" max="359" value="0"><span id="srv">0</span></label>
+<div id="sinfo"></div></div></div></div>
+</div><div id="note">Maps are not saved. Export before leaving.</div>
+<button id="go">Generate</button></div></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script>
+"use strict";
+const $=i=>document.getElementById(i),R=Math.random;
+// ---- state -------------------------------------------------------------
+let W=30,H=30,gen=false,mapN=0;
+const dens={sparse:.01,loose:.03,tight:.06,crowded:.1};
+// Demo theme data (placeholder, data-only). terrain:true items shape the ground.
+const THEME=[
+ {id:'hills',name:'Hills',terrain:true,opt:{count:[0,3,6,10],size:'r',val:[3,5,8]}},
+ {id:'pits',name:'Pits',terrain:true,opt:{count:[0,2,4,8]}},
+ {id:'trees',name:'Trees',rad:1.2,tallFt:[18,36]},
+ {id:'rocks',name:'Rocks',rad:.7,tallFt:[2,6]}];
+const sel={};THEME.forEach(t=>sel[t.id]='loose');
+let hills=[],pits=[];const groups={},items={};
+// ---- three setup -------------------------------------------------------
+const view=$('view'),ren=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true,alpha:true});
+ren.shadowMap.enabled=true;view.appendChild(ren.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x5d6b4a);
+const cam=new THREE.OrthographicCamera(-1,1,1,-1,-500,500);
+const amb=new THREE.AmbientLight(0xffffff,.5),sun=new THREE.DirectionalLight(0xffffff,1);
+sun.shadow.mapSize.set(2048,2048);scene.add(amb,sun,sun.target);
+const grad=new THREE.DataTexture(new Uint8Array([90,90,90,255,170,170,170,255,255,255,255,255]),3,1,THREE.RGBAFormat);
+grad.minFilter=grad.magFilter=THREE.NearestFilter;grad.needsUpdate=true;
+function mat(c){return $('toon').checked?new THREE.MeshToonMaterial({color:c,gradientMap:grad}):new THREE.MeshLambertMaterial({color:c})}
+// ---- terrain height ----------------------------------------------------
+const bump=(d,r)=>d<r?.5*(1+Math.cos(Math.PI*d/r)):0;
+function hAt(x,z){let h=0;for(const a of hills)h=Math.max(h,a.h*bump(Math.hypot(x-a.x,z-a.z),a.r));
+ for(const p of pits)h-=p.d*bump(Math.hypot(x-p.x,z-p.z),p.r);return h}
+function buildTerrain(){
+ if(groups.ground){scene.remove(groups.ground);groups.ground.geometry.dispose()}
+ const S=4,g=new THREE.PlaneGeometry(W,H,W*S,H*S);g.rotateX(-Math.PI/2);
+ const p=g.attributes.position,col=new Float32Array(p.count*3);
+ for(let i=0;i<p.count;i++){const x=p.getX(i)+W/2,z=p.getZ(i)+H/2,h=hAt(x,z);p.setY(i,h);
+  const c=new THREE.Color().setHSL(.25,.35,Math.min(.7,Math.max(.2,.4+h*.06)));col.set([c.r,c.g,c.b],i*3)}
+ g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();
+ const m=new THREE.Mesh(g,mat(0xffffff));m.material.vertexColors=true;m.receiveShadow=m.castShadow=true;
+ m.layers.set(1);groups.ground=m;scene.add(m);buildContours()}
+// Contour lines (topographic style): marching squares over the height field, one line per 0.5 tile of elevation.
+// The zero level is skipped (flat ground). Lines are 1 px wide (WebGL limit) and sit 0.03 above the surface.
+function buildContours(){
+ if(groups.contour){scene.remove(groups.contour);groups.contour.geometry.dispose()}
+ const S=4,n=W*S+1,m=H*S+1,hv=new Float32Array(n*m);let lo=0,hi=0;
+ for(let j=0;j<m;j++)for(let i=0;i<n;i++){const v=hAt(i/S,j/S);hv[j*n+i]=v;if(v<lo)lo=v;if(v>hi)hi=v}
+ const seg=[],P=[];let L=0;
+ const cr=(x0,y0,v0,x1,y1,v1)=>{if((v0>=L)!==(v1>=L)){const t=(L-v0)/(v1-v0);P.push((x0+(x1-x0)*t)/S-W/2,(y0+(y1-y0)*t)/S-H/2)}};
+ for(L=Math.ceil(lo*2)/2;L<=hi;L+=.5){if(Math.abs(L)<1e-6)continue;
+  for(let j=0;j<m-1;j++)for(let i=0;i<n-1;i++){const a=hv[j*n+i],b=hv[j*n+i+1],c=hv[(j+1)*n+i+1],d=hv[(j+1)*n+i];
+   if(Math.min(a,b,c,d)>=L||Math.max(a,b,c,d)<L)continue;
+   P.length=0;cr(i,j,a,i+1,j,b);cr(i+1,j,b,i+1,j+1,c);cr(i+1,j+1,c,i,j+1,d);cr(i,j+1,d,i,j,a);
+   for(let k=0;k+3<P.length;k+=4)seg.push(P[k],L+.03,P[k+1],P[k+2],L+.03,P[k+3])}}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(seg,3));
+ const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x3a2a14,transparent:true,opacity:.7}));
+ l.layers.set(1);groups.contour=l;scene.add(l)}
+// ---- objects -----------------------------------------------------------
+// Icosahedron geometry is non-indexed: each corner is stored once per face. Jitter must therefore be keyed by POSITION so
+// coincident corners move together (no gaps), and normals are averaged per position so the surface shades smoothly.
+function jitter(g,a){const p=g.attributes.position,m=new Map(),key=(x,y,z)=>x.toFixed(3)+','+y.toFixed(3)+','+z.toFixed(3);
+ for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),k=key(x,y,z);if(!m.has(k))m.set(k,[(R()-.5)*a,(R()-.5)*a,(R()-.5)*a]);const d=m.get(k);p.setXYZ(i,x*(1+d[0]),y*(1+d[1]),z*(1+d[2]))}
+ const n=new Float32Array(p.count*3),acc=new Map(),A=new THREE.Vector3(),B=new THREE.Vector3(),Cc=new THREE.Vector3();
+ for(let i=0;i<p.count;i+=3){A.fromBufferAttribute(p,i);B.fromBufferAttribute(p,i+1);Cc.fromBufferAttribute(p,i+2);
+  const f=B.clone().sub(A).cross(Cc.clone().sub(A));for(let j=0;j<3;j++){const k=key(p.getX(i+j),p.getY(i+j),p.getZ(i+j));acc.set(k,(acc.get(k)||new THREE.Vector3()).add(f))}}
+ for(let i=0;i<p.count;i++){const v=acc.get(key(p.getX(i),p.getY(i),p.getZ(i))).clone().normalize();n.set([v.x,v.y,v.z],i*3)}
+ g.setAttribute('normal',new THREE.BufferAttribute(n,3));return g}
+function model(t,s){const gp=new THREE.Group();
+ if(t.id==='trees'){const k=new THREE.Mesh(new THREE.CylinderGeometry(.18*s,.3*s,1.2*s,6),mat(0x6b4a2b));k.position.y=.6*s;
+  const c=new THREE.Mesh(jitter(new THREE.IcosahedronGeometry(1*s,1),.3),mat(0x2f7a3a));c.position.y=1.9*s;c.userData.overhang=true;gp.add(k,c)}
+ else{const r=new THREE.Mesh(jitter(new THREE.IcosahedronGeometry(.6*s,1),.35),mat(0x8a8a8a));r.position.y=.3*s;gp.add(r)}
+ gp.traverse(o=>o.castShadow=o.receiveShadow=true);return gp}
+function free(x,z,r){return items.all.every(o=>Math.hypot(o.x-x,o.z-z)>=o.r+r)}
+function place(t){if(selItem&&selItem.userData.rec.t===t.id)select(null);const k=THEME.indexOf(t)+3;
+ if(groups[t.id]){scene.remove(groups[t.id])}const gp=new THREE.Group();groups[t.id]=gp;
+ items.all=items.all.filter(o=>o.t!==t.id);
+ const n=Math.round(W*H*dens[sel[t.id]]);
+ for(let i=0;i<n*5&&gp.children.length<n;i++){const s=.7+R()*.8,x=R()*W,z=R()*H,r=t.rad*s;
+  if(x<r||z<r||x>W-r||z>H-r||!free(x,z,r))continue;
+  const m=model(t,s);m.position.set(x-W/2,hAt(x,z),z-H/2);m.rotation.y=R()*6.28;
+  const rec={t:t.id,x,z,r};m.userData={rec,r0:r,fs:1,hs:1};m.traverse(o=>o.layers.set(k));gp.add(m);items.all.push(rec)}
+ scene.add(gp)}
+function terrainGen(){
+ const c=h=>THEME[h].opt.count[['sparse','loose','tight','crowded'].indexOf(sel[THEME[h].id])];
+ hills=[];pits=[];
+ for(let i=0;i<c(0);i++)hills.push({x:R()*W,z:R()*H,r:3+R()*5,h:.5*Math.round(1+R()*4)});
+ for(let i=0;i<c(1);i++)pits.push({x:R()*W,z:R()*H,r:2+R()*3,d:.5*Math.round(1+R()*3)});
+ buildTerrain()}
+function reseat(){for(const t of THEME)if(!t.terrain&&groups[t.id])groups[t.id].children.forEach(m=>m.position.y=hAt(m.position.x+W/2,m.position.z+H/2))}
+// ---- grid ---------------------------------------------------------------
+function buildGrid(){if(groups.grid)scene.remove(groups.grid);const v=[];
+ for(let i=0;i<=W;i++)v.push(i-W/2,0,-H/2,i-W/2,0,H/2);for(let j=0;j<=H;j++)v.push(-W/2,0,j-H/2,W/2,0,j-H/2);
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+ const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x000000,transparent:true,opacity:.45,depthTest:false}));
+ l.renderOrder=10;l.layers.set(2);l.visible=$('grid').checked;groups.grid=l;scene.add(l)}
+// ---- camera ----------------------------------------------------------------
+const C={yaw:0,pitch:89.9,zoom:1,x:0,z:0};
+function camUpdate(){const w=view.clientWidth,h=view.clientHeight,s=Math.max(W,H)*.6/C.zoom,a=w/h;
+ cam.left=-s*a;cam.right=s*a;cam.top=s;cam.bottom=-s;cam.updateProjectionMatrix();
+ const y=C.yaw*Math.PI/180,p=C.pitch*Math.PI/180;
+ cam.position.set(C.x+Math.sin(y)*Math.cos(p)*200,Math.sin(p)*200,C.z+Math.cos(y)*Math.cos(p)*200);
+ cam.up.set(0,1,0);cam.lookAt(C.x,0,C.z);cam.layers.enableAll();
+ // View buttons light up only while the tilt sits exactly on their snap angle (middle-drag unhighlights them).
+ const p0=C.pitch;document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on',{top:p0>=89.8,iso:Math.abs(p0-45)<.01,side:p0<=.6}[b.dataset.v]));
+ // Grid auto-hides when the view is within 5 degrees of side-on (85+ degrees from straight down). It only READS the manual
+ // checkbox and never writes it, so the user's on/off choice is always respected. Export uses the checkbox alone.
+ if(groups.grid)groups.grid.visible=$('grid').checked&&p0>5
+}
+function setView(v){C.pitch={top:89.9,iso:45,side:.5}[v];
+ }
+const snap=d=>{C.yaw=(Math.round(C.yaw/45)+d)*45};
+// Tilt levels: side-on, 45 degrees, straight down. Arrows move one level; middle-drag can sit between them.
+const LV=[.5,45,89.9],tilt=d=>{C.pitch=d>0?(LV.find(v=>v>C.pitch+.01)??C.pitch):([...LV].reverse().find(v=>v<C.pitch-.01)??C.pitch)};
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>setView(b.dataset.v));
+$('cq').onclick=()=>snap(-1);$('ce').onclick=()=>snap(1);$('up').onclick=()=>tilt(1);$('dn').onclick=()=>tilt(-1);
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='q'||e.key==='Q')snap(-1);if(e.key==='e'||e.key==='E')snap(1)});
+let drag=null;const cv=ren.domElement;
+cv.oncontextmenu=e=>e.preventDefault();
+cv.onpointerdown=e=>{if(e.button===1||e.button===2){drag={b:e.button,x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId);e.preventDefault()}
+ else if(e.button===0){const hit=pick(e);select(hit);if(hit){drag={b:0,x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId);startMove(e)}}};
+cv.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;
+ if(drag.b===0){moveSel(e);return}if(drag.b===2){const k=(cam.top-cam.bottom)/view.clientHeight,r=new THREE.Vector3().setFromMatrixColumn(cam.matrix,0),u=new THREE.Vector3().setFromMatrixColumn(cam.matrix,1);
+  u.y=0;if(u.lengthSq()<1e-4)u.set(0,0,-1);u.normalize();r.y=0;r.normalize();
+  C.x-=(dx*r.x-dy*u.x*(C.pitch>60?1:1))*k;C.z-=(dx*r.z-dy*u.z)*k}
+ else{C.pitch=Math.min(89.9,Math.max(.5,C.pitch+dy*.4));C.yaw-=dx*.4}};
+cv.onpointerup=e=>{if(drag&&drag.b===1&&Math.abs(e.movementX)+Math.abs(e.movementY)<2){}drag=null};
+cv.addEventListener('wheel',e=>{e.preventDefault();C.zoom=Math.min(8,Math.max(.3,C.zoom*(e.deltaY<0?1.1:.9)))},{passive:false});
+// ---- selecting and moving items ------------------------------------------------------------
+// Click an item to select it (tinted). Left-drag slides it across the ground and re-seats it on the terrain. The Placement tab
+// scales width/depth together, height separately, and rotates. Hand moves ignore collision; there is no lock yet, so rerolling
+// an item type replaces its moved items.
+let selItem=null;const ray=new THREE.Raycaster(),ndc=new THREE.Vector2(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),0),off=new THREE.Vector3(),hp=new THREE.Vector3();
+function setRay(e){const r=cv.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));ray.setFromCamera(ndc,cam)}
+function pick(e){setRay(e);ray.layers.enableAll();const roots=THEME.filter(t=>!t.terrain&&groups[t.id]).flatMap(t=>groups[t.id].children);
+ const h=ray.intersectObjects(roots,true)[0];if(!h)return null;let o=h.object;while(o&&!o.userData.rec)o=o.parent;return o||null}
+function tint(m,c){m.traverse(x=>{if(x.isMesh&&x.material.emissive)x.material.emissive.setHex(c)})}
+function info(){if(!selItem)return;const u=selItem.userData;$('sfpv').textContent=u.fs;$('shv').textContent=u.hs;$('srv').textContent=$('sr').value;
+ const b=new THREE.Box3().setFromObject(selItem);$('sinfo').textContent='Height ≈ '+Math.round((b.max.y-b.min.y)*3)+' ft'}
+function select(o){if(selItem)tint(selItem,0);selItem=o;$('nosel').style.display=o?'none':'';$('selui').style.display=o?'':'none';if(!o)return;
+ tint(o,0x4a4a10);const u=o.userData;$('selname').textContent=THEME.find(t=>t.id===u.rec.t).name;
+ $('sfp').value=u.fs;$('sh').value=u.hs;$('sr').value=Math.round(((o.rotation.y*180/Math.PI)%360+360)%360);info();$('a3').classList.add('open')}
+function startMove(e){plane.constant=-selItem.position.y;setRay(e);if(ray.ray.intersectPlane(plane,hp))off.copy(selItem.position).sub(hp)}
+function moveSel(e){if(!selItem)return;setRay(e);if(!ray.ray.intersectPlane(plane,hp))return;
+ const x=Math.min(W/2,Math.max(-W/2,hp.x+off.x)),z=Math.min(H/2,Math.max(-H/2,hp.z+off.z));
+ selItem.position.set(x,hAt(x+W/2,z+H/2),z);selItem.userData.rec.x=x+W/2;selItem.userData.rec.z=z+H/2}
+['sfp','sh','sr'].forEach(i=>$(i).oninput=()=>{if(!selItem)return;const u=selItem.userData;u.fs=+$('sfp').value;u.hs=+$('sh').value;
+ selItem.scale.set(u.fs,u.hs,u.fs);selItem.rotation.y=$('sr').value*Math.PI/180;u.rec.r=u.r0*u.fs;info()});
+// ---- lights ------------------------------------------------------------------
+function lightUpdate(){const a=+$('la').value*Math.PI/180,c=+$('lc').value*Math.PI/180;
+ $('lav').textContent=$('la').value;$('lcv').textContent=$('lc').value;
+ sun.color.set($('lt').value);sun.intensity=+$('li').value;
+ const R_=80;sun.position.set(Math.sin(c)*Math.sin(a)*R_,Math.cos(a)*R_,-Math.cos(c)*Math.sin(a)*R_);
+ sun.castShadow=a>0.001;const s=Math.max(W,H)*1.1;Object.assign(sun.shadow.camera,{left:-s,right:s,top:s,bottom:-s,near:1,far:300});sun.shadow.camera.updateProjectionMatrix()}
+['la','lc','li','lt'].forEach(i=>$(i).oninput=lightUpdate);
+// ---- UI --------------------------------------------------------------------------
+// Accordion: the left 75% of a bar opens that tab and closes the others (or closes it if already open);
+// the right 25% arrow pins a tab open so swapping tabs leaves it alone. Unpinning leaves it open as a normal tab.
+document.querySelectorAll('.acc').forEach(a=>{const t=a.querySelector('.t'),p=a.querySelector('.pin');
+ t.onclick=()=>{if(a.classList.contains('open')){a.classList.remove('open','pinned');return}
+  document.querySelectorAll('.acc').forEach(o=>{if(!o.classList.contains('pinned'))o.classList.remove('open')});a.classList.add('open')};
+ p.onclick=e=>{e.stopPropagation();if(a.classList.toggle('pinned'))a.classList.add('open')}});
+function tabs(){const o=$('objs');o.innerHTML='';THEME.forEach(t=>{const d=document.createElement('div');d.className='sub';
+ d.innerHTML=`<b>${t.name}${t.terrain?' (terrain)':''}</b><label>Density <select>${Object.keys(dens).map(k=>`<option ${k===sel[t.id]?'selected':''}>${k}</option>`).join('')}</select></label><button>Reroll ${t.name}</button>`;
+ d.querySelector('select').onchange=e=>sel[t.id]=e.target.value;
+ d.querySelector('button').onclick=()=>{if(t.terrain){terrainGen();reseat()}else place(t)};o.appendChild(d)})}
+function full(){W=Math.min(100,Math.max(5,+$('w').value||30));H=Math.min(100,Math.max(5,+$('h').value||30));
+ items.all=[];THEME.forEach(t=>{if(groups[t.id])scene.remove(groups[t.id])});
+ terrainGen();buildGrid();THEME.filter(t=>!t.terrain).forEach(place);C.x=C.z=0;mapN++;lightUpdate();$('go').textContent='Reroll Whole Map'}
+$('go').onclick=full;$('grid').onchange=()=>{if(groups.grid)groups.grid.visible=$('grid').checked};
+$('toon').onchange=()=>scene.traverse(o=>{if(o.isMesh){const c=o.material.color.clone(),v=o.material.vertexColors;o.material=mat(c);o.material.vertexColors=v}});
+// ---- export -------------------------------------------------------------------------
+// Ghosting: an object stays in the scene (so it still casts and receives shadows) but writes no colour or depth,
+// which makes it invisible to the camera. Used by the two-pass export below.
+function ghost(test,on){scene.traverse(o=>{if((o.isMesh||o.isLine)&&test(o)){o.material.colorWrite=!on;o.material.depthWrite=!on}})}
+function exportImg(){
+ const px=Math.min(+$('px').value,Math.floor(8192/Math.max(W,H))),w=W*px,h=H*px;
+ const sv={...C},sz=ren.getSize(new THREE.Vector2());
+ const oc=new THREE.OrthographicCamera(-W/2,W/2,H/2,-H/2,-500,500);oc.position.set(0,200,0);oc.up.set(0,0,-1);oc.lookAt(0,0,0);oc.layers.enableAll();
+ ren.setPixelRatio(1);ren.setSize(w,h,false);groups.grid.visible=false;
+ ghost(o=>o.userData.overhang,true);ren.render(scene,oc);ghost(o=>o.userData.overhang,false); // pass 1: overhangs ghosted (shadows stay)
+ const out=document.createElement('canvas');out.width=w;out.height=h;const g=out.getContext('2d');g.drawImage(ren.domElement,0,0);
+ // pass 2 (foreground): only overhang parts draw; everything else is ghosted but still casts shadows onto them. Transparent background.
+ const bg=scene.background;scene.background=null;ren.setClearColor(0x000000,0);
+ ghost(o=>!o.userData.overhang,true);ren.render(scene,oc);ghost(o=>!o.userData.overhang,false);
+ const fg=document.createElement('canvas');fg.width=w;fg.height=h;fg.getContext('2d').drawImage(ren.domElement,0,0);scene.background=bg;
+ groups.grid.visible=$('grid').checked;ren.setPixelRatio(devicePixelRatio);ren.setSize(sz.x,sz.y,false);
+ // elevation per tile (laser at tile centre, 0.5 steps, zero = most common)
+ const E=[],cnt={};for(let i=0;i<W;i++){E[i]=[];for(let j=0;j<H;j++){const e=Math.round(hAt(i+.5,j+.5)*2)/2;E[i][j]=e;cnt[e]=(cnt[e]||0)+1}}
+ const z0=+Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];for(let i=0;i<W;i++)for(let j=0;j<H;j++)E[i][j]-=z0;
+ const lev=d=>d<.5?0:d<1?1:d<1.5?2:d<2?4:Infinity,CV={};
+ for(let i=0;i<W;i++)for(let j=0;j<H;j++){if(E[i][j]===0)continue;
+  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const x=i+a,y=j+b;if((!a&&!b)||x<0||y<0||x>=W||y>=H||E[x][y]===E[i][j])continue;
+   const hi=E[x][y]>E[i][j]?[x,y]:[i,j],v=lev(Math.abs(E[x][y]-E[i][j])),k=hi[0]+','+hi[1];if(v>0)CV[k]=k in CV?Math.min(CV[k],v):v}}
+ if($('grid').checked){g.strokeStyle='rgba(0,0,0,.45)';g.lineWidth=Math.max(1,px/50);g.beginPath();
+  for(let i=0;i<=W;i++){g.moveTo(i*px,0);g.lineTo(i*px,h)}for(let j=0;j<=H;j++){g.moveTo(0,j*px);g.lineTo(w,j*px)}g.stroke()}
+ g.font=`bold ${Math.round(px*.1)}px sans-serif`;g.fillStyle='#fff';g.strokeStyle='#000';g.lineWidth=px/50;
+ const T=(s,x,y,al)=>{g.textAlign=al;g.strokeText(s,x,y);g.fillText(s,x,y)};
+ // Crossed-out eye = no line of sight. Drawn with canvas paths (no font dependency). (x,y) is its centre, s its half-width.
+ const eye=(x,y,s)=>{g.save();g.lineWidth=px/30;g.strokeStyle='#000';g.fillStyle='#fff';g.beginPath();g.moveTo(x-s,y);g.quadraticCurveTo(x,y-s*1.1,x+s,y);g.quadraticCurveTo(x,y+s*1.1,x-s,y);g.closePath();g.fill();g.stroke();
+  g.fillStyle='#000';g.beginPath();g.arc(x,y,s*.32,0,6.3);g.fill();g.strokeStyle='#d02027';g.lineWidth=px/45;g.beginPath();g.moveTo(x-s*.8,y+s*.6);g.lineTo(x+s*.8,y-s*.6);g.stroke();g.restore()};
+ const stamp=(c,xr,y)=>{if(c===Infinity){T('♜',xr-px*.14,y,'right');eye(xr-px*.05,y-px*.035,px*.05)}else T('♜'+c,xr,y,'right')};
+ for(let i=0;i<W;i++)for(let j=0;j<H;j++){const e=E[i][j],c=CV[i+','+j];
+  if(e)T('▲'+(e>0?'+':'')+e,i*px+px*.05,(j+1)*px-px*.06,'left');
+  if(c)stamp(c,(i+1)*px-px*.05,(j+1)*px-px*.06)}
+ // object cover (approx height, ft) at the middle of each object
+ g.font=`${Math.round(px*.16)}px sans-serif`;g.lineWidth=px/25;
+ THEME.filter(t=>!t.terrain).forEach(t=>groups[t.id]&&groups[t.id].children.forEach(m=>{const bb=new THREE.Box3().setFromObject(m),ft=(bb.max.y-bb.min.y)*3,tl=Math.round(ft/1.5)/2;
+  const cvr=tl<.5?0:tl<1?1:tl<1.5?2:tl<2?4:Infinity,s=Math.round(ft)+'ft/'+(cvr===Infinity?'':cvr),x=(m.position.x+W/2)*px,y=(m.position.z+H/2)*px;T(s,x,y,'center');if(cvr===Infinity)eye(x+g.measureText(s).width/2+px*.1,y-px*.05,px*.08)}));
+ const save=(cv,name)=>cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000)},'image/webp',.92);
+ save(out,`map_${mapN}_background.webp`);save(fg,`map_${mapN}_foreground.webp`);
+ alert(`Grid for your VTT: ${W}×${H} squares, ${px}px per square, 1 square = 3 ft.\nFiles: map_${mapN}_background.webp (ground, terrain, trunks, stamps) and map_${mapN}_foreground.webp (overhangs only, transparent; use as an overhead tile).`)}
+const eb=document.createElement('button');eb.textContent='Export WebP';eb.onclick=exportImg;$('hud').appendChild(eb);
+// ---- main loop (render on demand each frame; cheap for static scenes) ------------------
+function resize(){ren.setPixelRatio(devicePixelRatio);ren.setSize(view.clientWidth,view.clientHeight,false);cv.style.width='100%';cv.style.height='100%'}
+addEventListener('resize',resize);
+(function loop(){camUpdate();ren.render(scene,cam);requestAnimationFrame(loop)})();
+tabs();resize();full();setView('top');
+</script></body></html>
