@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// BEVM theme validator (made from BEVM v5.9.1; generated from Fanmapstick-v5.9.1.html, do not edit by hand).
-// Usage:  node Fanmapstick-theme-validator-v5.9.1.js my-theme.bevmtheme.json
+// BEVM theme validator (made from BEVM v6.0.1; generated from Fanmapstick-v6.0.1.html, do not edit by hand).
+// Usage:  node Fanmapstick-theme-validator-v6.0.1.js my-theme.bevmtheme.json
 // It runs the same checks BEVM runs when a theme file is installed. Exit code 0 = valid, 1 = problem (the message says what to fix).
 // Needs only Node.js. It reads the file, prints a summary or the first problem, and changes nothing.
 'use strict';
@@ -92,9 +92,9 @@ function themeSummary(d){const L=[d.name+'  (id '+d.id+')'];if(d.description)L.p
 
 if(require.main===module){
  const fs=require('fs'),f=process.argv[2];
- if(!f){console.error('Usage: node Fanmapstick-theme-validator-v5.9.1.js theme.json');process.exit(2)}
+ if(!f){console.error('Usage: node Fanmapstick-theme-validator-v6.0.1.js theme.json');process.exit(2)}
  try{const txt=fs.readFileSync(f,'utf8');if(txt.length>1000000)throw new Error('Theme problem: the file is larger than 1 MB.');let j;try{j=JSON.parse(txt)}catch(_){throw new Error('Theme problem: the file is not valid JSON.')}
-  const d=validateTheme(j);console.log('VALID (BEVM v5.9.1 rules)\n'+themeSummary(d));process.exit(0)}
+  const d=validateTheme(j);console.log('VALID (BEVM v6.0.1 rules)\n'+themeSummary(d));process.exit(0)}
  catch(e){console.error('INVALID: '+(e&&e.message||e));process.exit(1)}
 }
 module.exports={validateTheme,themeSummary};
