@@ -2,6 +2,9 @@
 
 A theme is a JSON file (suggested name: `something.bevmtheme.json`). It is **data only**: BEVM never runs anything from it. On install BEVM checks every field; unknown fields, wrong types or out-of-range numbers make the whole file be rejected with a message saying what is wrong. Files over 1 MB are rejected.
 
+
+**Two different kinds of "theme" (v6.0):** this file format is for **map themes** (the item types such as trees and rocks, listed in the Themes tab and chosen in Generation > Theme). The **app look** (Dark, Light, Parchment) is a separate setting in Control Schema > Accessibility > Theme and on the home page. A theme file cannot set the app look, the font or any colors of the interface, and the validator does not check them. Nothing in this format changed in v6.0 or v6.0.1; the validator rules are the same as in v5.9.1.
+
 ## Top level
 | field | required | rule |
 |---|---|---|
