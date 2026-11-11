@@ -8,6 +8,7 @@ Conventions that have held throughout: the theme validator is regenerated from t
 
 ## v6.0.1
 - The Theme drop-down in the Generation tab (Ground / Theme box) now stretches to the full width of the control panel.
+- THEME_FORMAT: added a note that map themes (this format) are separate from the app look (Dark / Light / Parchment); no format rules changed.
 - Fanmapstick-theme-validator-v6.0.1.js regenerated; the v6.0 file is replaced by it.
 
 ## v6.0
