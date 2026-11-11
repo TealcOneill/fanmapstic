@@ -1,0 +1,170 @@
+{
+ "app": "BEVM",
+ "kind": "theme",
+ "schema": 1,
+ "id": "the-squat-forest",
+ "name": "The Squat Forest",
+ "description": "The trees of this forest might seem impressive if you've never see a truly ancient tree.",
+ "items": [
+  {
+   "id": "conifers",
+   "name": "Conifers",
+   "single": "Conifer",
+   "description": "A tall thin tree with a cone shaped canopy.",
+   "footprintFt": 9.38,
+   "scaleRange": [1, 2.67],
+   "parts": [
+    {
+     "name": "Flared base",
+     "prim": "cylinder",
+     "size": [8, 7.5, 8],
+     "pos": [0, 3.75, 0],
+     "color": "#6b4a2b",
+     "taper": 0.5,
+     "noise": 0.08
+    },
+    {
+     "name": "Trunk",
+     "prim": "cylinder",
+     "size": [4, 63.75, 4],
+     "pos": [0, 35.625, 0],
+     "color": "#6b4a2b",
+     "noise": 0.08
+    },
+    {
+     "name": "Canopy",
+     "prim": "cylinder",
+     "size": [18.75, 60, 18.75],
+     "pos": [0, 45, 0],
+     "color": "#2e6b3a",
+     "taper": 0,
+     "noise": 0.1,
+     "overhang": true
+    }
+   ],
+   "topAreaFt2": 50.27
+  },
+  {
+   "id": "deciduous",
+   "name": "Deciduous",
+   "single": "Deciduous",
+   "description": "A shorter fatter tree with a big wide canopy.",
+   "footprintFt": 12.5,
+   "scaleRange": [1, 3],
+   "parts": [
+    {
+     "name": "Flared base",
+     "prim": "cylinder",
+     "size": [10, 2.5, 10],
+     "pos": [0, 1.25, 0],
+     "color": "#6b4a2b",
+     "taper": 0.5,
+     "noise": 0.08
+    },
+    {
+     "name": "Trunk",
+     "prim": "cylinder",
+     "size": [5, 16.25, 5],
+     "pos": [0, 9.375, 0],
+     "color": "#6b4a2b",
+     "noise": 0.08
+    },
+    {
+     "name": "Canopy",
+     "prim": "sphere",
+     "size": [25, 10, 25],
+     "pos": [0, 20, 0],
+     "color": "#3f8f3f",
+     "noise": 0.4,
+     "overhang": true
+    }
+   ],
+   "topAreaFt2": 78.54
+  },
+  {
+   "id": "bush",
+   "name": "Bush",
+   "single": "Bush",
+   "description": "A simple short shrub with a woody stem and a thick tangle of limbs.",
+   "footprintFt": 1.5,
+   "scaleRange": [1, 3],
+   "parts": [
+    {
+     "name": "Stem",
+     "prim": "cylinder",
+     "size": [0.5, 0.6, 0.5],
+     "pos": [0, 0.3, 0],
+     "color": "#4a3220",
+     "noise": 0.8
+    },
+    {
+     "name": "Foliage",
+     "prim": "sphere",
+     "size": [3, 2.4, 3],
+     "pos": [0, 1.5, 0],
+     "color": "#6b7a2a",
+     "noise": 0.4
+    }
+   ],
+   "topAreaFt2": 7.07
+  },
+  {
+   "id": "small-rocks",
+   "name": "Small Rocks",
+   "single": "Small Rock",
+   "description": "A small sandy colored rock.",
+   "footprintFt": 0.75,
+   "scaleRange": [1, 3],
+   "parts": [
+    {
+     "name": "Rock",
+     "prim": "sphere",
+     "size": [1.5, 1.5, 1.5],
+     "pos": [0, 0.45, 0],
+     "color": "#c8a46e",
+     "noise": 0.25
+    }
+   ],
+   "topAreaFt2": 1.77
+  },
+  {
+   "id": "big-rocks",
+   "name": "Big Rocks",
+   "single": "Big Rock",
+   "description": "A bigger rock with a smoother gray look.",
+   "footprintFt": 2.5,
+   "scaleRange": [1, 3],
+   "parts": [
+    {
+     "name": "Rock",
+     "prim": "sphere",
+     "size": [5, 5, 5],
+     "pos": [0, 1.5, 0],
+     "color": "#8a8d90",
+     "noise": 0.05
+    }
+   ],
+   "topAreaFt2": 19.63
+  },
+  {
+   "id": "stumps",
+   "name": "Stumps",
+   "single": "Stump",
+   "description": "What is left of the trees of the past.",
+   "footprintFt": 1,
+   "scaleRange": [1, 3],
+   "parts": [
+    {
+     "name": "Stump",
+     "prim": "cylinder",
+     "size": [2, 2, 2],
+     "pos": [0, 1, 0],
+     "color": "#6b4a2b",
+     "noise": 0.3
+    }
+   ],
+   "topAreaFt2": 3.14
+  }
+ ],
+ "groundTexture": "grass"
+}

@@ -1,0 +1,235 @@
+{
+ "app": "BEVM",
+ "kind": "theme",
+ "schema": 1,
+ "id": "format-sample",
+ "name": "Format sample (shapes only)",
+ "description": "A technical sample showing every field of the theme format. Not a real theme.",
+ "textures": [
+  {
+   "id": "ash",
+   "name": "Ash",
+   "colors": [
+    "#3a3836",
+    "#5c5955",
+    "#8a867f"
+   ],
+   "pattern": "gravel",
+   "size": 1.2,
+   "contrast": 1.1,
+   "detail": 0.5,
+   "drift": 0.3
+  }
+ ],
+ "items": [
+  {
+   "id": "pillars",
+   "name": "Pillars",
+   "single": "Pillar",
+   "footprintFt": 2,
+   "scaleRange": [
+    0.8,
+    1.4
+   ],
+   "parts": [
+    {
+     "name": "Column",
+     "prim": "cylinder",
+     "size": [
+      2,
+      8,
+      2
+     ],
+     "pos": [
+      0,
+      4,
+      0
+     ],
+     "color": "#9a9a9a",
+     "taper": 0.8,
+     "noise": 0.05
+    },
+    {
+     "name": "Cap",
+     "prim": "box",
+     "size": [
+      4,
+      1,
+      4
+     ],
+     "pos": [
+      0,
+      8.5,
+      0
+     ],
+     "color": "#b0b0b0",
+     "overhang": true
+    }
+   ],
+   "extras": [
+    {
+     "id": "glow",
+     "kind": "glow",
+     "label": "Glowing",
+     "color": "#66ccff"
+    }
+   ],
+   "topAreaFt2": 16
+  },
+  {
+   "id": "blocks",
+   "name": "Blocks",
+   "single": "Block",
+   "parts": [
+    {
+     "name": "Block",
+     "prim": "box",
+     "size": [
+      3,
+      3,
+      3
+     ],
+     "pos": [
+      0,
+      1.5,
+      0
+     ],
+     "color": "#7a5c3a",
+     "noise": 0.15
+    }
+   ],
+   "topAreaFt2": 9,
+   "abnormalities": {
+    "big": {
+     "chance": [
+      1,
+      50
+     ],
+     "value": [
+      2,
+      3
+     ]
+    }
+   },
+   "aura": {
+    "chance": [
+     1,
+     10
+    ],
+    "shape": "square",
+    "scale": 1.4,
+    "opacity": 0.3
+   }
+  },
+  {
+   "id": "road",
+   "name": "Roads",
+   "single": "Road",
+   "path": {
+    "kind": "road",
+    "widthFt": 15,
+    "minBendRadiusFt": 60
+   }
+  },
+  {
+   "id": "river",
+   "name": "Rivers",
+   "single": "River",
+   "path": {
+    "kind": "stream",
+    "advanced": true,
+    "widthFt": [
+     30,
+     50
+    ],
+    "minBendRadiusFt": 150
+   }
+  },
+  {
+   "id": "mesa",
+   "name": "Mesas",
+   "single": "Mesa",
+   "terrain": {
+    "deformsTerrain": true,
+    "usesTexture": true,
+    "texture": "stone",
+    "footprint": {
+     "shape": "ellipse",
+     "sizeFt": [
+      30,
+      60
+     ],
+     "aspect": [
+      1,
+      1.5
+     ]
+    },
+    "profile": {
+     "flatTop": 0.6,
+     "edge": "rounded"
+    },
+    "heightTiles": [
+     3,
+     6
+    ]
+   }
+  },
+  {
+   "id": "cliff",
+   "name": "Cliffs",
+   "single": "Cliff",
+   "terrain": {
+    "deformsTerrain": false,
+    "usesTexture": true,
+    "texture": "stone",
+    "footprint": {
+     "shape": "rectangle",
+     "sizeFt": [
+      3,
+      6
+     ],
+     "aspect": [
+      4,
+      8
+     ]
+    },
+    "bodyHeightFt": [
+     12,
+     20
+    ]
+   }
+  },
+  {
+   "id": "mud",
+   "name": "Mud patches",
+   "single": "Mud patch",
+   "terrain": {
+    "deformsTerrain": true,
+    "usesTexture": true,
+    "texture": "ash",
+    "footprint": {
+     "shape": "ellipse",
+     "sizeFt": [
+      6,
+      15
+     ],
+     "aspect": [
+      1,
+      2
+     ]
+    },
+    "profile": {
+     "flatTop": 0.9
+    },
+    "heightTiles": [
+     -1,
+     0
+    ],
+    "chance": [
+     1,
+     2
+    ]
+   }
+  }
+ ]
+}
