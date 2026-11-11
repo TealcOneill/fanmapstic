@@ -1,14 +1,27 @@
 # BEVM (Bird's Eye View Map) – Changelog
 
-**Current version: 5.9.1** (shown in the tab title, the panel footer and the User Context page).
+**Current version: 6.0.1** (shown in the tab title, the panel footer and the User Context page).
 
 Single-file web app (`Fanmapstick-vX.Y.html`, Three.js r152 from jsDelivr). **From v5.5 every file is named Fanmapstick-version** (the app `Fanmapstick-v5.5.html`, the validator `Fanmapstick-theme-validator-v5.5.js`, the documents `Fanmapstick-CHANGELOG.md`, `Fanmapstick-THEME_FORMAT.md`, `Fanmapstick-NOTES.md`); older entries below still say bevm.html / bevm_vX.Y.html, which are the same file under its old name. Entries are summaries written as each change was made, not diffs. Each version keeps its own file (Fanmapstick-vX.Y.html).
 
 Conventions that have held throughout: the theme validator is regenerated from the app file on every version; 1 world unit = 1 tile; heights are in tiles; map is on the X/Z plane, +Y up, north = -Z; elevation is sampled at tile centres in 0.5 steps with the most common level as zero; the higher tile of a pair gets the cover value (lowest value wins when several mark one tile).
 
+## v6.0.1
+- The Theme drop-down in the Generation tab (Ground / Theme box) now stretches to the full width of the control panel.
+- Fanmapstick-theme-validator-v6.0.1.js regenerated; the v6.0 file is replaced by it.
+
+## v6.0
+- **Home page built into the app.** It opens when the app starts (reading order: Accessibility, What and Why, Power and processing use, Upcoming Changes, Page theme, then the two buttons). **"Don't open this page again."** stores `fanmapstick.hideHome` in this browser so the page no longer opens by default; **"Close page for now."** goes to the map maker. A new **page button next to the "?"** (top right of the view) opens it again over the map maker. Esc also closes it. While it is open the map's keys and mouse thumb buttons are ignored and the map maker is inert, so nothing happens behind it.
+- **Power and processing section:** size slider (5 to 100 tiles, 100 px per tile), linear / logarithmic button (fixed axes, nothing jumps), "Maps exported" drag-number box (applies to both bars), 30-minute-session checkbox (about 7.5 Wh), chart with the Fanmapstick bar and one two-color AI bar (lowest-power model plus the extra up to the highest-power model), a data table with the same numbers, and the make-up calculator (minimum / average / maximum, twice the estimated 240 Wh used to build the app). Estimates only, not metered.
+- **Three themes for the whole app: Dark (default, unchanged), Light and Parchment.** Every color of the map maker UI now comes from CSS variables. Parchment uses the Eagle Lake handwriting font (SIL OFL 1.1) and the Old Paper Pack textures (CC0, Nia Mi), both bundled for now, ink-colored borders and a dark brown line between the control panel and the viewport. Later the font and paper become an optional download from the project's GitHub.
+- **Control Schema > Accessibility:** UI Scale moved down beside Font size; new **Theme** and **Built-in font** (theme default, handwritten, sans-serif, serif, monospace) settings; a font you add still takes over while it is chosen. The home page controls use the same settings: text size = Font size, "Double the interface size" = UI Scale (2), text color = Text tint, theme and font as above. **Theme and Built-in font are exported and imported with the Control Schema** and checked on import like the other Accessibility values.
+- Guide: new bullets for Theme, UI Scale and the home page (no version-specific text).
+- The five wording fixes in the home page text ("to to", "user-adjustable", "its screen reader accessibility", "its own dedicated map maker").
+- Fanmapstick-theme-validator-v6.0.js regenerated; the v5.9.1 file is replaced by it.
+
 ## v5.9.1
 - **Guide page rewritten** in 11 numbered sections (Quick start, Moving the camera, Working with items, Hills and pits, Paths, The side panel, Undo and redo, Exporting and saving, Keys / mouse / accessibility, Good to know, Using this page) with a clickable contents list at the top. All version tags ("v4.9" and the like) and "for now / right now / under development" wording were removed, related facts were grouped together (for example the path rules and the per-tab settings), and the old "Alt does nothing" note was dropped. No feature changed. The page header still shows the app version.
-- Homepage idea is only a mockup so far (Fanmapstick-homepage-mockup-v5.9.1.html), not in the app.
+- Homepage idea is only a mockup so far, not in the app (built in v6.0).
 
 ## v5.9
 - **System Selector** now stretches to the width of the control panel (Settings tab) and the Control Schema's System box lists the same systems.
