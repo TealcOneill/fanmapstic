@@ -21,6 +21,7 @@
    "drift": 0.3
   }
  ],
+ "groundTexture": "ash",
  "items": [
   {
    "id": "pillars",
@@ -74,7 +75,57 @@
      "color": "#66ccff"
     }
    ],
-   "topAreaFt2": 16
+   "topAreaFt2": 16,
+   "description": "Sample text only. Item descriptions are written by the theme author and are optional.",
+   "abnormalities": {
+    "hidden": {
+     "chance": [
+      1,
+      100
+     ]
+    },
+    "noShadow": {
+     "chance": [
+      1,
+      100
+     ]
+    },
+    "small": {
+     "chance": [
+      1,
+      20
+     ],
+     "value": [
+      0.3,
+      0.6
+     ]
+    },
+    "floating": {
+     "chance": [
+      1,
+      30
+     ],
+     "heightFt": [
+      5,
+      20
+     ]
+    },
+    "light": {
+     "chance": [
+      1,
+      25
+     ],
+     "radiusFt": 30,
+     "tint": "#ffe9b0"
+    },
+    "colorVariation": {
+     "chance": [
+      1,
+      5
+     ],
+     "value": 30
+    }
+   }
   },
   {
    "id": "blocks",
@@ -118,7 +169,14 @@
     ],
     "shape": "square",
     "scale": 1.4,
-    "opacity": 0.3
+    "scaleX": 1.2,
+    "scaleY": 0.9,
+    "rotation": 45,
+    "offsetXFt": 2,
+    "offsetYFt": -1,
+    "opacity": 0.3,
+    "noise": 0.2,
+    "tint": "#8ec5ff"
    }
   },
   {
@@ -142,7 +200,13 @@
      30,
      50
     ],
-    "minBendRadiusFt": 150
+    "minBendRadiusFt": 150,
+    "windiness": 0.5,
+    "heightTiles": [
+     -5,
+     -3
+    ],
+    "texture": "water"
    }
   },
   {
