@@ -1,10 +1,17 @@
 # BEVM (Bird's Eye View Map) – Changelog
 
-**Current version: 6.0.1** (shown in the tab title, the panel footer and the User Context page).
+**Current version: 6.1** (shown in the tab title, the panel footer and the User Context page).
 
 Single-file web app (`Fanmapstick-vX.Y.html`, Three.js r152 from jsDelivr). **From v5.5 every file is named Fanmapstick-version** (the app `Fanmapstick-v5.5.html`, the validator `Fanmapstick-theme-validator-v5.5.js`, the documents `Fanmapstick-CHANGELOG.md`, `Fanmapstick-THEME_FORMAT.md`, `Fanmapstick-NOTES.md`); older entries below still say bevm.html / bevm_vX.Y.html, which are the same file under its old name. Entries are summaries written as each change was made, not diffs. Each version keeps its own file (Fanmapstick-vX.Y.html).
 
 Conventions that have held throughout: the theme validator is regenerated from the app file on every version; 1 world unit = 1 tile; heights are in tiles; map is on the X/Z plane, +Y up, north = -Z; elevation is sampled at tile centres in 0.5 steps with the most common level as zero; the higher tile of a pair gets the cover value (lowest value wins when several mark one tile).
+
+## v6.1
+- **Themes tab split into two sub-tabs.** **Installed** keeps the list of installed themes (Use, Export, Remove). **Install** holds everything for adding themes: the new **Get Themes from GitHub…** button, **Check Theme File…** and **Install Theme File…** (both unchanged), and the data-only note. Sharing your own themes by file works exactly as before.
+- **Get Themes from GitHub…** lists the `.bevmtheme.json` files in the `themes/` folder of the project repo and lets you install one with a button, so default themes do not have to be packed into the app. Nothing is contacted until you press the button. Only file names that look like `name.bevmtheme.json` are accepted (at most 40 files, each at most 1 MB); every file goes through the same validator as a file you install yourself, and files that fail are skipped and counted. Rows show "Already built into BEVM.", "Installed (up to date)." or Install / Update. The requests send no cookies and no referrer. If GitHub cannot be reached or its hourly request limit is hit, the message says so and points to the manual route (download from the repo, then Install Theme File).
+- **License.** BEVM is now offered under the GNU Affero General Public License, version 3 (or any later version). The file header carries the notice, and the home page has a license section above the two buttons with the notice, the no-warranty line, a link to download the license file from the repo, a link to the source code, and credits for Three.js, Eagle Lake and the Old Paper Pack.
+- README: new Contributing and License sections (what source changes are and are not acceptable, accessibility and inclusivity standards, theme contributions).
+- Guide updated for the sub-tabs. Fanmapstick-theme-validator-v6.1.js regenerated (rules unchanged); the v6.0.1 file is replaced by it.
 
 ## v6.0.1
 - The Theme drop-down in the Generation tab (Ground / Theme box) now stretches to the full width of the control panel.
