@@ -2,6 +2,10 @@
 
 Not built yet. Written down so they are not lost.
 
+## Draw path items from the Placement tab (added v6.1)
+- Need a way to draw path items (roads, trails, streams, rivers) by hand from the Placement tab, instead of only getting them from generation.
+- How it should work: not decided yet. Benjamin will describe it later.
+
 ## Theme list from GitHub (v6.1 follow-ups)
 - Built in v6.1: the list comes from the GitHub contents API (about 60 requests per hour per IP). If that limit becomes a problem, replace it with a single `themes/index.json` manifest fetched from raw.githubusercontent.com (also lets the list show author, license and a preview image).
 - Not built: theme author / license fields in the theme format; preview thumbnails.
