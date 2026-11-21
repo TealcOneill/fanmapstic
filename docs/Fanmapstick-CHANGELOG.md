@@ -1,10 +1,14 @@
 # BEVM (Bird's Eye View Map) – Changelog
 
-**Current version: 6.1** (shown in the tab title, the panel footer and the User Context page).
+**Current version: 6.1.1** (shown in the tab title, the panel footer and the User Context page).
 
 Single-file web app (`Fanmapstick-vX.Y.html`, Three.js r152 from jsDelivr). **From v5.5 every file is named Fanmapstick-version** (the app `Fanmapstick-v5.5.html`, the validator `Fanmapstick-theme-validator-v5.5.js`, the documents `Fanmapstick-CHANGELOG.md`, `Fanmapstick-THEME_FORMAT.md`, `Fanmapstick-NOTES.md`); older entries below still say bevm.html / bevm_vX.Y.html, which are the same file under its old name. Entries are summaries written as each change was made, not diffs. Each version keeps its own file (Fanmapstick-vX.Y.html).
 
 Conventions that have held throughout: the theme validator is regenerated from the app file on every version; 1 world unit = 1 tile; heights are in tiles; map is on the X/Z plane, +Y up, north = -Z; elevation is sampled at tile centres in 0.5 steps with the most common level as zero; the higher tile of a pair gets the cover value (lowest value wins when several mark one tile).
+
+## v6.1.1
+- **Fixed: the home page button froze the app after "Don't open this page again" had been used.** When that choice was stored, the app hid the home page with a rule set at page load that was never removed. Pressing the home page button then made the map maker inert (as designed while the page is open) behind a page that never appeared, so nothing responded; Esc was the only way out. Opening the home page now removes that rule, so the page shows, closes and reopens normally. Found in v6.0.1 and also present in v6.0 and v6.1.
+- Fanmapstick-theme-validator-v6.1.1.js regenerated (rules unchanged); the v6.1 file is replaced by it. Fanmapstick-power-calculator-v6.1.html is unchanged and keeps its own version.
 
 ## v6.1
 - **Themes tab split into two sub-tabs.** **Installed** keeps the list of installed themes (Use, Export, Remove). **Install** holds everything for adding themes: the new **Get Themes from GitHub…** button, **Check Theme File…** and **Install Theme File…** (both unchanged), and the data-only note. Sharing your own themes by file works exactly as before.
