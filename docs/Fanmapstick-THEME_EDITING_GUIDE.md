@@ -38,7 +38,7 @@ Two things to remember:
 If you work outside the app, there is also a command-line checker, the theme validator (`Fanmapstick-theme-validator-vX.Y.js`). It needs Node.js and is run like this:
 
 ```
-node Fanmapstick-theme-validator-v6.1.js my-forest.bevmtheme.json
+node Fanmapstick-theme-validator-v6.1.1.js my-forest.bevmtheme.json
 ```
 
 It runs the same checks as the app and prints `VALID` with a summary, or `INVALID` and the first problem. You do not need it if you use the app's Check Theme File button.
