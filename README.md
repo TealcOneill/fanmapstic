@@ -22,6 +22,7 @@ Open the newest file in `versions/` (the highest version number) in a browser. N
 | `docs/` | Changelog (an entry for every version), theme file format guide, development notes. |
 | `themes/` | Theme files (`.bevmtheme.json`). The app's **Themes > Install > Get Themes from GitHub** button lists and installs the ones in this folder. |
 | `tools/` | The standalone theme validator (`node Fanmapstick-theme-validator-vX.Y.js my-theme.bevmtheme.json`). |
+| `power-calculator/` | The Power and processing use section of the home page as its own one-file page (`Fanmapstick-power-calculator-vX.Y.html`), for sharing. No network requests, nothing stored; read the source before running it if you like. |
 | `drafts/` | Mockups and ideas that are not part of the app yet. |
 
 Some versions are missing because they were test builds that were never saved.

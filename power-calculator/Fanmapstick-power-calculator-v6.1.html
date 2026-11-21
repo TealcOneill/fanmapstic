@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fanmapstick Power and Processing Calculator v6.1</title>
+<!--
+ Fanmapstick Power and Processing Calculator v6.1 (CURRENT VERSION)
+ This is the Power and processing use section of BEVM v6.1 as its own small page. It is one file, has no network requests, no cookies and
+ no storage, and sends nothing anywhere. All of its code is below; read it before running it if you like.
+ Copyright (C) 2026 the Fanmapstick project.
+ This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as
+ published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+ Source and license: https://github.com/TealcOneill/fanmapstic
+-->
+<style>
+*{box-sizing:border-box}
+:root{--bg:#1d1f24;--ink:#e8e8ea;--panel:#26282e;--btn:#33363f;--btnInk:#fff;--hline:#6b7080;--accent:#6a8fd8;--muted:#a9adb8;--c1:#7aa2f0;--c2:#e08a4a;--c3:#f2c27b;--line:#1d1f24;--homeBg:#1d1f24}
+html[data-theme=light]{--bg:#e9ecf1;--ink:#1b1d22;--panel:#fff;--btn:#eef1f6;--btnInk:#1b1d22;--hline:#6a7080;--accent:#2f5fb8;--muted:#4b505b;--c1:#2f5fb8;--c2:#b4541a;--c3:#e0a050;--line:#e9ecf1;--homeBg:#e9ecf1}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px system-ui,sans-serif}
+#home{padding:18px;min-height:100vh;background:var(--homeBg)}
+#home .themebar{display:flex;gap:10px;align-items:center;justify-content:flex-end;max-width:860px;margin:0 auto 10px}
+#home .themebar button{font-weight:600;padding:6px 12px;border:2px solid var(--hline);border-radius:8px;background:var(--btn);color:var(--btnInk);cursor:pointer;font-size:inherit}
+#home .themebar button[aria-pressed=true]{outline:3px solid var(--c2);outline-offset:1px}
+#home .row button{font-weight:600;padding:9px 16px;border:2px solid var(--hline);border-radius:8px;background:var(--btn);color:var(--btnInk);cursor:pointer;font-size:inherit}
+#home .foot{max-width:860px;margin:14px auto 0;font-size:.85em;color:var(--muted)}
+#home :focus-visible{outline:3px solid #ffb84d;outline-offset:2px}
+#home{position:fixed;inset:0;overflow:auto;background:var(--homeBg);color:var(--ink);padding:18px}
+#home .wrap{max-width:860px;margin:0 auto;position:relative;z-index:1}
+#home header{text-align:center;margin:6px 0 18px}
+#home h1{margin:0;font-size:2em}
+#home .tag{margin:2px 0 0;font-size:1.15em;color:var(--muted)}
+#home .stack{display:flex;flex-direction:column;gap:16px}
+#home .sec{background:var(--panel);border:2px solid var(--hline);border-radius:8px;padding:14px 18px}
+#home .sec h2{margin:0 0 6px;font-size:1.25em}
+#home .ph{border:1px dashed var(--hline);border-radius:6px;padding:8px 10px;margin:6px 0;color:var(--muted);font-style:italic}
+#home a{color:#8fb3ff;text-decoration:underline}
+#home .prose p{margin:0 0 .6em}
+#home .spaced{padding-left:1.2em}
+#home .spaced li{margin:0 0 1em}
+#home .bigline{font-size:1.5em;line-height:1.45;font-weight:600;margin:.8em 0 .5em}
+#home .dev{font-size:.8em;border-left:3px solid var(--accent);padding:2px 8px;margin:8px 0;color:var(--muted)}
+#home fieldset{border:0;padding:0;margin:0}
+#home legend{padding:0;margin-bottom:6px;font-weight:700}
+#home .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
+#home .opt input{position:absolute;opacity:0;width:1px;height:1px}
+#home .opt label{display:block;border:2px solid var(--hline);border-radius:8px;padding:9px 16px;cursor:pointer;min-width:150px;background:var(--panel)}
+#home .opt input:checked+label{background:var(--btn);color:var(--btnInk);font-weight:700}
+#home .opt input:checked+label::before{content:"\2713\00a0"}
+#home .opt input:focus-visible+label{outline:3px solid #ffb84d;outline-offset:2px}
+#home .row button[aria-pressed=true]{outline:3px solid var(--c2);outline-offset:1px}
+#home select,#home input[type=number]{background:var(--panel);color:var(--ink);border:2px solid var(--hline);border-radius:6px;padding:6px 8px}
+#home input[type=range]{accent-color:var(--ink);width:min(380px,100%)}
+#home input[type=color]{width:46px;height:34px;border:2px solid var(--hline);border-radius:6px;background:var(--panel);padding:2px;cursor:pointer}
+#home label.l{display:inline-flex;gap:8px;align-items:center}
+#home table{border-collapse:collapse;width:100%;font-size:.85em;margin-top:6px}
+#home th,#home td{border:1.5px solid var(--hline);padding:4px 8px;text-align:left}
+#home svg text{fill:var(--ink);font-family:inherit;font-size:12px}
+#home .c1{fill:var(--c1)}
+#home .c2{fill:var(--c2)}
+#home .c3{fill:url(#hatch)}
+#home .calc{border:2px solid var(--hline);border-radius:8px;padding:8px 14px;margin:12px 0}
+#home .calc h3{margin:0 0 4px;font-size:1.05em}
+#home .big{font-size:1.4em;font-weight:700;margin:6px 0 2px}
+#home .sw{display:inline-block;width:18px;height:12px;border:1.5px solid var(--hline);vertical-align:-1px;margin-right:4px}
+#home{z-index:80;font-size:calc(16px*var(--fsx,1));line-height:1.55;-webkit-user-select:text;user-select:text}
+#home *{-webkit-user-select:text;user-select:text}
+#home button,#home select,#home input,#home textarea{font-size:inherit!important}
+#home h1,#home h2,#home h3,#home p,#home ul,#home figure{margin-top:0}
+#home label{margin:0;justify-content:flex-start}
+#home select,#home input[type=number]{width:auto}
+#home input[type=number]{width:84px}
+#home .row button[aria-checked=true]{outline:3px solid var(--c2);outline-offset:1px}
+#home .legend{gap:16px;font-size:.85em}
+#home .opt label{color:inherit}#home .opt input:checked+label{color:var(--btnInk)!important}
+#home input[type=text]{width:auto}
+#home output{display:inline}
+</style>
+</head>
+<body>
+<div id="home">
+<div class="wrap">
+<div class="themebar" role="group" aria-label="Page look"><span>Look:</span><button type="button" id="thD" aria-pressed="true">Dark</button><button type="button" id="thL" aria-pressed="false">Light</button></div>
+<main class="stack">
+   <section class="sec" id="power" aria-labelledby="powH">
+    <h2 id="powH">Power and processing use</h2>
+    <div class="prose"><p>Now, they are by no means perfect but below is a small collection of data analysis tools to help you see my point. Feel free to read it and play with it to see what is what but I'll summarize the intent behind it.</p><p>Going based off what data I could collect from various research papers and the profiling tool I used on this web toy I put this data together which shows that yes AI images can be cheaper for smaller images with the most efficient models but in most cases the processing and power use cost per image is much higher than with my app.</p></div>
+    <div class="row">
+     <label class="l" for="tiles">Map size in tiles (square, 100 px per tile):</label>
+     <input type="range" id="tiles" min="5" max="100" step="1" value="80" aria-describedby="sizeTxt">
+     <output id="tilesOut" for="tiles"><b>80</b></output>
+    </div>
+    <p id="sizeTxt" class="dev"></p>
+    <div class="row">
+     <button type="button" id="scaleBtn" aria-pressed="false">Scale: linear (click for logarithmic)</button>
+     <label class="l"><input type="checkbox" id="sess"> Add a 30-minute editing session to the Fanmapstick bar (about 7.5 Wh)</label>
+     <label class="l" for="vers">Maps exported:</label><input type="number" id="vers" min="1" max="1000" value="1" style="width:84px" aria-describedby="versTxt">
+    </div>
+    <p id="versTxt" class="dev">In one 30-minute session you can export many maps. The session cost is paid once and each extra map only adds its export. Each map also counts as one more AI image, so both bars grow with this number. Drag the box up or down to change it, or click it and type. The chart axis never changes with the slider: linear runs 0 to 500 Wh, logarithmic runs 0.001 to 1000 Wh. A bar that goes past the end is cut off with an arrow and its real value is written beside it.</p>
+    <figure style="margin:8px 0">
+     <svg id="chart" role="img" aria-labelledby="gT gD" viewBox="0 0 720 230" width="100%">
+      <defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="var(--c3)"/><line x1="0" y1="0" x2="0" y2="7" stroke="var(--line)" stroke-width="2.2"/></pattern></defs>
+      <title id="gT">Estimated energy to make one image, by map size</title>
+      <desc id="gD">Updates with the size slider.</desc>
+      <g id="plot"></g>
+     </svg>
+     <div class="row legend"><span><span class="sw" style="background:var(--c1)"></span>Fanmapstick export</span><span><span class="sw" style="background:var(--c2)"></span>AI image, lowest-power model</span><span><span class="sw" style="background:var(--c3)"></span>AI image, extra up to the highest-power model</span></div>
+     <p id="live" class="dev" aria-live="polite"></p>
+     <table><caption class="dev" style="text-align:left">Same data as the graph</caption><thead><tr><th scope="col">Item</th><th scope="col">Estimated energy</th></tr></thead><tbody id="tbody"></tbody></table>
+     <div class="calc" role="group" aria-labelledby="calcH">
+      <h3 id="calcH">Make-up calculator</h3>
+      <p>Building this app used about <b id="devWh">240</b> Wh of AI compute (estimated from the tokens in the chat that built it so far). Double that is <b id="devWh2">480</b> Wh. This is how many AI images of the size above it takes to use that much:</p>
+      <fieldset><legend>AI power use to assume</legend><div class="row">
+       <div class="opt"><input type="radio" name="calcm" id="cm-min" value="min"><label for="cm-min">Minimum</label></div>
+       <div class="opt"><input type="radio" name="calcm" id="cm-avg" value="avg" checked><label for="cm-avg">Average</label></div>
+       <div class="opt"><input type="radio" name="calcm" id="cm-max" value="max"><label for="cm-max">Maximum</label></div>
+      </div></fieldset>
+      <p class="big" id="calcOut" aria-live="polite"></p>
+     </div>
+     <p class="dev">About these numbers (rough estimates, not metered): AI images use measured figures of 0.086 Wh (lowest-power model) to 4.08 Wh (highest-power model) at 1024x1024 from arXiv 2506.17016, scaled by pixel count; real models cannot make images this large in one go, so the AI bars are a floor. The Fanmapstick export is about 0.4 Wh at 8000x8000. The app limits exports to 8192 px per side, so above 81 tiles its tile size is reduced while the AI bar keeps growing.</p>
+    </figure>
+   </section>
+</main>
+<p class="foot">This page is the Power and processing use section of BEVM (Bird's Eye View Map), part of Fanmapstick. It runs entirely in your browser and contacts nothing. Free software under the GNU Affero General Public License, version 3 or any later version, with no warranty. <a href="https://raw.githubusercontent.com/TealcOneill/fanmapstic/main/LICENSE" target="_blank" rel="noopener">Download the license file</a> &middot; <a href="https://github.com/TealcOneill/fanmapstic" target="_blank" rel="noopener">Source code on GitHub</a></p>
+</div>
+</div>
+<script>
+'use strict';
+const $=i=>document.getElementById(i);
+// ---- power chart: fixed linear axis 0 to 500 Wh, fixed label column, so nothing moves around when the slider changes
+let LOG=false;const AI_MIN=0.086/1.048576,AI_MAX=4.08/1.048576,FAN=0.4/64,SESS=7.5,DEV=240; // Wh per megapixel; session Wh; Wh to build the app (estimate)
+function fmt(v){return v>=100?v.toFixed(0):v>=10?v.toFixed(1):v>=1?v.toFixed(2):v.toFixed(3)}
+function draw(){const n=+$('tiles').value,V=Math.max(1,Math.min(1000,Math.round(+$('vers').value)||1)),px=n*100,mp=px*px/1e6,appPx=Math.min(px,8192),appMp=appPx*appPx/1e6,sess=$('sess').checked,
+ fan=FAN*appMp*V+(sess?SESS:0),loOne=AI_MIN*mp,hiOne=AI_MAX*mp,lo=loOne*V,hi=hiOne*V,L=100,R=560,W=R-L,LX=572,AXMAX=LOG?1000:500;
+ $('tilesOut').innerHTML='<b>'+n+'</b> x <b>'+n+'</b>';
+ $('sizeTxt').textContent=n+' x '+n+' tiles at 100 px per tile = '+px.toLocaleString()+' x '+px.toLocaleString()+' px ('+mp.toFixed(1)+' megapixels)'+(px>8192?'. The app exports at '+appPx+' px per side here.':'.');
+ $('tiles').setAttribute('aria-valuetext',n+' by '+n+' tiles, '+px+' by '+px+' pixels');
+ const x=v=>LOG?L+(Math.log10(Math.min(Math.max(v,1e-3),AXMAX))+3)/6*W:L+Math.min(v,AXMAX)/AXMAX*W;let g='';
+ for(const v of (LOG?[.001,.01,.1,1,10,100,1000]:[0,100,200,300,400,500])){g+='<line x1="'+x(v)+'" y1="20" x2="'+x(v)+'" y2="170" stroke="currentColor" stroke-opacity=".28"/><text x="'+x(v)+'" y="188" text-anchor="middle">'+v+'</text>'}
+ g+='<text x="'+(L+W/2)+'" y="216" text-anchor="middle">Watt-hours (Wh), '+(LOG?'logarithmic scale, 0.001 to 1000':'linear scale, 0 to 500')+'</text>';
+ const rect=(y,a,b,cls)=>{const w=Math.max(2,x(b)-x(a));return '<rect class="'+cls+'" x="'+x(a)+'" y="'+y+'" width="'+w+'" height="34" stroke="var(--line)" stroke-width="1.5"/>'},
+  arrow=y=>'<polygon points="'+(R+1)+','+(y-2)+' '+(R+11)+','+(y+17)+' '+(R+1)+','+(y+36)+'" fill="var(--ink)"/>';
+ g+='<text x="6" y="62">Fanmapstick</text>'+rect(44,LOG?1e-3:0,fan,'c1')+(fan>AXMAX?arrow(44):'')+'<text x="'+LX+'" y="66">'+'about '+fmt(fan)+' Wh</text>'+(fan>AXMAX?'<text x="'+LX+'" y="82">(past the chart)</text>':'');
+ g+='<text x="6" y="132">AI image'+(V>1?'s':'')+'</text>'+rect(114,LOG?1e-3:0,Math.min(lo,AXMAX),'c2')+(hi>lo&&lo<AXMAX?rect(114,lo,hi,'c3'):'')+(hi>AXMAX?arrow(114):'')+'<text x="'+LX+'" y="132">'+fmt(lo)+' to '+fmt(hi)+' Wh</text>'+(hi>AXMAX?'<text x="'+LX+'" y="148">(past the chart)</text>':'');
+ $('plot').innerHTML=g;
+ $('live').textContent=n+' by '+n+' tiles, '+V+(V>1?' maps':' map')+': Fanmapstick about '+fmt(fan)+' Wh'+(sess?' including a 30 minute session':'')+'; AI '+fmt(lo)+' to '+fmt(hi)+' Wh.';
+ $('tbody').innerHTML='<tr><th scope="row">Fanmapstick, '+V+(V>1?' exports':' export')+(sess?' plus 30 minute session':'')+'</th><td>about '+fmt(fan)+' Wh</td></tr><tr><th scope="row">AI, '+V+(V>1?' images':' image')+', lowest-power model</th><td>'+fmt(lo)+' Wh</td></tr><tr><th scope="row">AI, '+V+(V>1?' images':' image')+', highest-power model</th><td>'+fmt(hi)+' Wh</td></tr>';
+ const m=(document.querySelector('input[name=calcm]:checked')||{}).value||'avg',one=m==='min'?loOne:m==='max'?hiOne:(loOne+hiOne)/2,need=Math.ceil(2*DEV/one);
+ $('devWh').textContent=DEV;$('devWh2').textContent=2*DEV;
+ $('calcOut').textContent=need.toLocaleString()+' images at '+n+' x '+n+' tiles ('+fmt(one)+' Wh each, '+(m==='min'?'minimum':m==='max'?'maximum':'average')+' power use)'}
+$('scaleBtn').onclick=()=>{LOG=!LOG;$('scaleBtn').setAttribute('aria-pressed',String(LOG));$('scaleBtn').textContent=LOG?'Scale: logarithmic (click for linear)':'Scale: linear (click for logarithmic)';draw()};
+$('tiles').oninput=draw;$('sess').onchange=draw;$('vers').oninput=draw;document.querySelectorAll('input[name=calcm]').forEach(r=>r.onchange=draw);
+// look: follows the system setting at first, then the buttons
+(function(){const set=t=>{document.documentElement.setAttribute('data-theme',t);$('thD').setAttribute('aria-pressed',String(t==='dark'));$('thL').setAttribute('aria-pressed',String(t==='light'));draw()};
+$('thD').onclick=()=>set('dark');$('thL').onclick=()=>set('light');
+set(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches?'light':'dark')})();
+</script>
+</body>
+</html>
