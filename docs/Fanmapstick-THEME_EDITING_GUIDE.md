@@ -26,8 +26,8 @@ A **theme** (a *map theme*, to be exact) is a small text file that tells BEVM wh
 1. **Make a copy first.** Keep the original untouched. Name your copy something new.
 2. **Change the copy's `id` and `name`** (see section 6) so the copy and the original are easy to tell apart in the Themes tab.
 3. **Make one small change at a time.** Save.
-4. **Press "Check Theme File…"** in the Themes tab and pick your file. It checks the file without installing it and tells you what is wrong, or lists what is inside. This takes a second and never changes anything.
-5. When it says the file is fine, press **"Install Theme File…"**, then choose the theme in Generation > Theme (or press **Use** in the Themes tab) and Generate a map to see it.
+4. **Press "Check Theme File…"** in the Themes tab, on the **Install** sub-tab, and pick your file. It checks the file without installing it and tells you what is wrong, or lists what is inside. This takes a second and never changes anything.
+5. When it says the file is fine, press **"Install Theme File…"** (same sub-tab), then choose the theme in Generation > Theme (or press **Use** in the Themes tab) and Generate a map to see it.
 6. Repeat from step 3.
 
 Two things to remember:
@@ -38,7 +38,7 @@ Two things to remember:
 If you work outside the app, there is also a command-line checker, the theme validator (`Fanmapstick-theme-validator-vX.Y.js`). It needs Node.js and is run like this:
 
 ```
-node Fanmapstick-theme-validator-v6.0.1.js my-forest.bevmtheme.json
+node Fanmapstick-theme-validator-v6.1.js my-forest.bevmtheme.json
 ```
 
 It runs the same checks as the app and prints `VALID` with a summary, or `INVALID` and the first problem. You do not need it if you use the app's Check Theme File button.

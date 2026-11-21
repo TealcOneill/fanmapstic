@@ -2,6 +2,10 @@
 
 Not built yet. Written down so they are not lost.
 
+## Theme list from GitHub (v6.1 follow-ups)
+- Built in v6.1: the list comes from the GitHub contents API (about 60 requests per hour per IP). If that limit becomes a problem, replace it with a single `themes/index.json` manifest fetched from raw.githubusercontent.com (also lets the list show author, license and a preview image).
+- Not built: theme author / license fields in the theme format; preview thumbnails.
+
 ## Colorblind helper (from Benjamin's earlier note)
 - A list of all default colors in the installed themes, with a tint selector per color, the color's name, a separator, and the part name.
 - Notes only for now.
